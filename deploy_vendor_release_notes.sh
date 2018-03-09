@@ -91,7 +91,7 @@ display "Posted the deployment package to AWS."
 # IV. Send notification email.
 
 recipient="etoolshelpdesk@gsa.gov"
-cc="-c Robert.Sherwood@nolijconsulting.com -c thomas.ahn@gsa.gov"
+cc="-c Robert.Sherwood@nolijconsulting.com -c thomas.ahn@gsa.gov -c larry.lee@nolijconsulting.com"
 
 display "Notifying GSA..."
 mutt -s "Please deploy the Vendor Facing Release Notes Package" $cc $recipient <<- EOF
