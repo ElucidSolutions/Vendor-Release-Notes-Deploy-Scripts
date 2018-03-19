@@ -45,10 +45,17 @@ source="vendor-facing-release-notes-$timestamp"
 package="$source.zip"
 hash="$package.sha1"
 
+# Accepts one argument: emsg, an error message
+# string; and prints the given error message.
+function error () {
+  local emsg=$1
+  (>&2 echo -e "\033[41mError:\033[0m $emsg")
+  exit 1
+}
+
 if [[ $# < 1 ]]
 then
-  echo -e "\033[41mError:\033[0m Invalid command line. The <path> argument is missing."
-  exit 1
+  error "\033[41mError:\033[0m Invalid command line. The <path> argument is missing."
 else
   path=$1
 fi
@@ -68,7 +75,7 @@ function display () {
 # I. Create the source directory.
 
 display "Creating the source directory..."
-cp -r $path $source
+cp -r $path $source || error "an error occured while trying to create the source directory."
 rm -r $source/{.git,.sass-cache}
 rm $source/{.gitattributes,.gitignore,config.rb}
 display "Created the source directory."
@@ -77,15 +84,15 @@ display "Created the source directory."
 # II. Package the source directory.
 
 display "Creating the deployment package..."
-zip -rq $package $source
+zip -rq $package $source || error "an error occured while trying to package the source directory."
 sha1sum $package > $hash
 display "Created the deployment package."
 
 # III. Post the package to AWS.
 
 display "Posting the deployment package to AWS..."
-aws s3 cp $package $bucket --acl public-read-write
-aws s3 cp $hash $bucket --acl public-read-write
+aws s3 cp $package $bucket --acl public-read-write || error "an error occured while trying to upload the package to AWS."
+aws s3 cp $hash $bucket --acl public-read-write || error "an error occured while trying to upload the hash file to AWS."
 display "Posted the deployment package to AWS."
 
 # IV. Send notification email.
@@ -94,7 +101,7 @@ recipient="etoolshelpdesk@gsa.gov"
 cc="-c Robert.Sherwood@nolijconsulting.com -c thomas.ahn@gsa.gov -c larry.lee@nolijconsulting.com"
 
 display "Notifying GSA..."
-mutt -s "Please deploy the Vendor Facing Release Notes Package" $cc $recipient <<- EOF
+#mutt -s "Please deploy the Vendor Facing Release Notes Package" $cc $recipient <<- EOF
 Hi,
 
 The latest version of the Vendor Facing Release Notes (https://eoffer-test.fas.gsa.gov/AMSupport/vendor-release-notes/) is ready for deployment.
